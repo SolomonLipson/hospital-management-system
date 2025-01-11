@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Patient {
+  id               Int        @id @default(autoincrement())
+  name             String
+  age              Int
+  gender           String
+  roomNumber       String
+  bedNumber        String
+  floorNumber      String
+  contactInfo      String
+  emergencyContact String
+  allergies        String?
+  diseases         String?
+  dietCharts       DietChart[] @relation(onDelete: Cascade) // Cascade delete DietChart records when deleting a patient
+}
+
+model DietChart {
+  id             Int      @id @default(autoincrement())
+  patientId      Int
+  patient        Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade) // Cascade delete DietChart records when patient is deleted
+  mealType       String
+  instructions   String
+  ingredients    String
+  createdAt      DateTime @default(now())
+}
+
+model Staff {
+  id             Int      @id @default(autoincrement())
+  name           String
+  role           String
+  contactInfo    String
+  tasks          Task[]
+}
+
+model Task {
+  id             Int      @id @default(autoincrement())
+  description    String
+  staffId        Int
+  staff          Staff    @relation(fields: [staffId], references: [id])
+  completed      Boolean  @default(false)
+}
+
+model Delivery {
+  id             Int      @id @default(autoincrement())
+  mealBoxDetails String
+  deliveryStatus String
+  timestamp      DateTime @default(now())
+}
