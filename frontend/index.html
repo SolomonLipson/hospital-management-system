@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hospital Management</title>
+</head>
+
+<body>
+    <h1>Hospital Management System</h1>
+
+    <h2>Add New Patient</h2>
+    <form id="addPatientForm">
+        <input type="text" id="name" placeholder="Name" required><br>
+        <input type="number" id="age" placeholder="Age" required><br>
+        <input type="text" id="gender" placeholder="Gender" required><br>
+        <input type="text" id="roomNumber" placeholder="Room Number" required><br>
+        <input type="text" id="bedNumber" placeholder="Bed Number" required><br>
+        <input type="text" id="floorNumber" placeholder="Floor Number" required><br>
+        <input type="text" id="contactInfo" placeholder="Contact Info" required><br>
+        <input type="text" id="emergencyContact" placeholder="Emergency Contact" required><br>
+        <input type="text" id="allergies" placeholder="Allergies"><br>
+        <input type="text" id="diseases" placeholder="Diseases"><br>
+        <button type="submit">Add Patient</button>
+    </form>
+    <div id="errorMessage" style="color: red;"></div>
+
+    <h2>List of Patients</h2>
+    <table id="patientsTable">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Contact Info</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <script>
+        document.getElementById('addPatientForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            try {
+                const response = await fetch('http://localhost:3000/patients', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: document.getElementById('name').value,
+                        age: parseInt(document.getElementById('age').value, 10),
+                        gender: document.getElementById('gender').value,
+                        roomNumber: document.getElementById('roomNumber').value,
+                        bedNumber: document.getElementById('bedNumber').value,
+                        floorNumber: document.getElementById('floorNumber').value,
+                        contactInfo: document.getElementById('contactInfo').value,
+                        emergencyContact: document.getElementById('emergencyContact').value,
+                        allergies: document.getElementById('allergies').value,
+                        diseases: document.getElementById('diseases').value,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    const errorMessageElement = document.getElementById('errorMessage');
+                    errorMessageElement.textContent = `Error: ${error.error}`;
+                    return;
+                }
+
+                const result = await response.json();
+                console.log('Patient Added:', result);
+                alert('Patient Added Successfully!');
+                fetchPatients();  // Update patient list after adding
+            } catch (error) {
+                console.error('Error during POST request:', error);
+                alert('An unexpected error occurred. Check the console for details.');
+            }
+        });
+
+        async function fetchPatients() {
+            const response = await fetch('http://localhost:3000/patients');
+            const patients = await response.json();
+            const patientsTable = document.getElementById('patientsTable').getElementsByTagName('tbody')[0];
+            patientsTable.innerHTML = ''; // Clear existing rows
+            patients.forEach(patient => {
+                const row = patientsTable.insertRow();
+                row.innerHTML = `
+                    <td>${patient.name}</td>
+                    <td>${patient.age}</td>
+                    <td>${patient.gender}</td>
+                    <td>${patient.contactInfo}</td>
+                    <td><button onclick="deletePatient(${patient.id})">Delete</button></td>
+                `;
+            });
+        }
+
+        async function deletePatient(id) {
+            const response = await fetch(`http://localhost:3000/patients/${id}`, {
+                method: 'DELETE',
+            });
+
+            if (response.ok) {
+                alert('Patient deleted successfully');
+                fetchPatients();
+            } else {
+                alert('Error deleting patient');
+            }
+        }
+
+        fetchPatients(); // Fetch and display patients when the page loads
+    </script>
+</body>
+
+</html>
